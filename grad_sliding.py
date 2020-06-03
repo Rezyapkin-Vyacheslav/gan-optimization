@@ -116,7 +116,7 @@ class GradSliding(Optimizer):
                         # Beginning of main loop of new iteration.
                         # Now par is again x_underbar.
                         x_underbar = (1 - self.gamma_next) * state['x_bar'] \
-                            + self.gamma_next * state['x']
+                                   + self.gamma_next * state['x']
                         par.copy_(x_underbar)
                 
         return loss
