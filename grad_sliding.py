@@ -50,10 +50,6 @@ class GradSliding(Optimizer):
         self.t += 1
         self.p = self.t / 2
         self.theta = 2 * (self.t + 1) / (self.t * (self.t + 3))
-        
-        if self.t % self.T == 0:
-            self.t = 0
-            self.mode = 'main'
 
     @torch.no_grad()
     def to_eval(self):
@@ -144,5 +140,8 @@ class GradSliding(Optimizer):
                         state['x_underbar'] = self.gamma_next * state['x'] \
                             + (1 - self.gamma_next) * state['x_bar']
                         par.copy_(state['x_underbar'])
+            if self.t % self.T == 0:
+                self.t = 0
+                self.mode = 'main'
                 
         return loss
