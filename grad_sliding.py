@@ -37,7 +37,6 @@ class GradSliding(Optimizer):
         
         self.P = 2 / ((self.T + 1) * (self.T + 2))
         self.beta = 9 * L * (1 - self.P) / (2 * (self.k + 1))
-        # print(f">>> gamma={self.gamma:.2f}, T={self.T:.2f}, P={self.P:.2f}, beta={self.beta:.2f}")
     
     def upd_PS_parameters(self):
         """
@@ -51,7 +50,6 @@ class GradSliding(Optimizer):
         self.t += 1
         self.p = self.t / 2
         self.theta = 2 * (self.t + 1) / (self.t * (self.t + 3))
-        # print(f"p={self.p:.2f}, theta={self.theta:.2f}")
         
         if self.t % self.T == 0:
             self.t = 0
