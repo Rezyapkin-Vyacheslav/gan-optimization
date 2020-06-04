@@ -9,6 +9,7 @@ class GradSliding(Optimizer):
         super().__init__(params, defaults)
         self.k = 0
         self.t = 0
+        self.steps = 0
         self.mode = 'main'
     
     def upd_main_parameters(self):
@@ -21,6 +22,7 @@ class GradSliding(Optimizer):
         gamma, T, beta - formula (8.1.42); T - formula (8.1.42).
         gamma_next is value of gamma in the next iteration.
         """
+        self.steps += 1
         self.k += 1
         self.mode = 'PS'
 
@@ -45,6 +47,7 @@ class GradSliding(Optimizer):
         according to formula (8.1.39) in Lan's book. If this is the last
         PS iteration, change mode to main and reset counter.
         """
+        self.steps += 1
         self.t += 1
         self.p = self.t / 2
         self.theta = 2 * (self.t + 1) / (self.t * (self.t + 3))
@@ -54,6 +57,30 @@ class GradSliding(Optimizer):
             self.t = 0
             self.mode = 'main'
 
+    @torch.no_grad()
+    def to_eval(self):
+        """Load x_bar as model parameters.
+        
+        Recommended to do only at the beginning of main loop."""
+        for group in self.param_groups:
+            for par in group['params']:
+                if par.grad is None:
+                    continue
+                state = self.state[par]
+                par.copy_(state['x_bar'])
+
+    @torch.no_grad()
+    def to_train(self):
+        """Load x_underbar as model parameters.
+        
+        Recommended to do only at the beginning of main loop."""
+        for group in self.param_groups:
+            for par in group['params']:
+                if par.grad is None:
+                    continue
+                state = self.state[par]
+                par.copy_(state['x_underbar'])
+        
     @torch.no_grad()
     def step(self, closure=None):
         """Perform Gradient Sliding step."""
@@ -76,6 +103,7 @@ class GradSliding(Optimizer):
                     if len(state) == 0:
                         state['x'] = par.clone()
                         state['x_bar'] = par.clone()
+                        state['x_underbar'] = par.clone()
                     
                     state['df_x'] = par.grad
                     # At the beginning of PS procedure, gradient of h
@@ -115,8 +143,8 @@ class GradSliding(Optimizer):
                                        + self.gamma * state['x_tilde']
                         # Beginning of main loop of new iteration.
                         # Now par is again x_underbar.
-                        x_underbar = (1 - self.gamma_next) * state['x_bar'] \
-                                   + self.gamma_next * state['x']
-                        par.copy_(x_underbar)
+                        state['x_underbar'] = self.gamma_next * state['x'] \
+                            + (1 - self.gamma_next) * state['x_bar']
+                        par.copy_(state['x_underbar'])
                 
         return loss
