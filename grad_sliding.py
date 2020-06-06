@@ -1,10 +1,25 @@
 import torch
 from torch.optim.optimizer import Optimizer
 from math import ceil
+"""
+Gradient Sliding algorithm.
+
+The algorithm is proposed by G. Lan in paper:
+https://arxiv.org/pdf/1406.0919.pdf
+and also described in his textbook:
+http://pwp.gatech.edu/guanghui-lan/wp-content/uploads/sites/330/2019/08/LectureOPTML.pdf
+In this code, we reference formulas from the textbook.
+"""
 
 class GradSliding(Optimizer):
-    """Lan's Gradient Sliding algorithm."""
     def __init__(self, params, L, M, D_tilde):
+        """
+        Create optimizer with specified parameters.
+        
+        Meaning of parameters L, M and D_tilde is explained, respectively,
+        in formulas (8.1.2), (8.1.2) and Corollary 8.2. (page 497) in
+        Lan's book.
+        """
         defaults = dict(L=L, M=M, D_tilde=D_tilde)
         super().__init__(params, defaults)
         self.k = 0
@@ -119,7 +134,7 @@ class GradSliding(Optimizer):
                     
                     dh_u = par.grad
 
-                    # Formula (1) from our report.
+                    # Formula (3) from our report.
                     numerator = self.beta * (state['x'] + self.p * par) \
                               - state['df_x'] - dh_u
                     par.copy_(numerator / (self.beta * (1 + self.p)))
