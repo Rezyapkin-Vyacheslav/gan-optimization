@@ -9,7 +9,6 @@ from torch.optim.optimizer import Optimizer, required
 
 class QuickPropSGD(Optimizer):
     def __init__(self, params, lr=1e-3, weight_decay=0, eps=1e-7):
-      
         if lr < 0.0:
             raise ValueError("Invalid learning rate: {}".format(lr))
             
@@ -20,8 +19,8 @@ class QuickPropSGD(Optimizer):
             raise ValueError("Invalid weight_decay value: {}".format(weight_decay))
 
         defaults = dict(lr=lr, weight_decay=weight_decay, eps=eps)
-       
         super(QuickPropSGD, self).__init__(params, defaults)
+
             
     @torch.no_grad()
     def step(self, closure=None):
@@ -47,25 +46,15 @@ class QuickPropSGD(Optimizer):
                 if group['weight_decay'] != 0:
                     grad = grad.add(p, alpha=weight_decay)
                     
-                if len(state) == 0 :
+                if len(state) == 0:
                     state['step'] = 0
-                    state['deltap'] = p.data.clone()
-                    state['gradprev'] = grad.clone()
-                    p.data -= group['lr']*grad
-                    state['deltap'] = p.data - state['deltap']
-                    state['step'] += 1
-                    continue
-                  
-                if state['step'] < 3 :
-                    p.data -= group['lr']*grad
-                    state['deltap'] = state['deltap'] * (grad / (state['gradprev'] - grad + group['eps']) )
-                    state['gradprev'] = grad.clone()
-                    state['step'] += 1
-                    continue
-                
-                state['step'] += 1
-                state['deltap'] *= grad / (state['gradprev'] - grad + group['eps']) 
-                state['gradprev'] = grad.clone()
-                p.data += group['lr'] * state['deltap']
+                    state['gradprev'] = torch.empty_like(p.data).uniform_(0, 1)
+                    state['deltap']   = torch.ones_like(p.data)
 
+                state['step'] += 1
+                deltaw1 = state['deltap'] * (grad / (state['gradprev'] - grad + group['eps']) )
+                state['gradprev'] = grad.clone()
+                p.data += group['lr'] * deltaw1
+                state['deltap'] = deltaw1.clone() 
         return loss
+
