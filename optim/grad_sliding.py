@@ -134,7 +134,7 @@ class GradSliding(Optimizer):
                     
                     dh_u = par.grad
 
-                    # Formula (3) from our report.
+                    # Formula (7) from our report.
                     numerator = self.beta * (state['x'] + self.p * par) \
                               - state['df_x'] - dh_u
                     par.copy_(numerator / (self.beta * (1 + self.p)))
