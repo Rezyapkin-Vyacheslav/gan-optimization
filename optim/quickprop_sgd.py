@@ -69,4 +69,3 @@ class QuickPropSGD(Optimizer):
                 p.data += group['lr'] * state['deltap']
 
         return loss
-
